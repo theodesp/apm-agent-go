@@ -11,7 +11,9 @@ import (
 	contenttype "github.com/gobuffalo/mw-contenttype"
 	"github.com/gobuffalo/x/sessions"
 	"github.com/rs/cors"
-	"go.elastic.co/apm-agent-go/module/apmbuffalo/example/models"
+
+	"go.elastic.co/apm/module/apmbuffalo"
+	"go.elastic.co/apm/module/apmbuffalo/example/models"
 )
 
 // ENV is used to help switch settings based on where the
@@ -57,7 +59,9 @@ func App() *buffalo.App {
 		// Remove to disable this.
 		app.Use(popmw.Transaction(models.DB))
 
-		app.GET("/", HomeHandler)
+		app.GET("/", apmbuffalo.Wrap(buffalo.WrapBuffaloHandlerFunc(HomeHandler), "/"))
+		app.Muxer().NotFoundHandler = apmbuffalo.WrapNotFoundHandler(app.Muxer().NotFoundHandler)
+		app.Muxer().MethodNotAllowedHandler = apmbuffalo.WrapMethodNotAllowedHandler(app.Muxer().MethodNotAllowedHandler)
 	}
 
 	return app
